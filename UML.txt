@@ -1,0 +1,7 @@
+ARCHITECTURE/DESIGN
+
+Main - responsible for containing all other classes
+Board - keeps track of the positions of the pieces
+Piece - stores piece info (name/number, position, mind-controlled boolean)
+Game - keeps track of whose turn to move, determines valid moves using Board class
+Setup - allows the user to set up their board before the game starts
