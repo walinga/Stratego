@@ -10,10 +10,6 @@ class Board {
 
   final int highestPiece = 10;
 
-  public Board() {
-    this.setup();
-  }
-
   public void setup() {
     // TODO: Verify that these are the right number of each piece
     // Initialize several Piece classes
