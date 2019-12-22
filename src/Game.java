@@ -3,6 +3,10 @@ import java.util.*;
 class Game {
   Board board;
   char turn;
+  boolean started;
+  char winner;
+
+  Piece lastCapture;
   List<Piece> capturedBlues;
   List<Piece> capturedReds;
 
@@ -10,39 +14,22 @@ class Game {
     this.board = board;
     capturedBlues = new ArrayList<>();
     capturedReds = new ArrayList<>();
+    started = false;
   }
 
   public void start() {
     turn = 'r';
+    started = true;
   }
 
+  // Don't check the started boolean here. We may eventually want to call this method
+  // before the board is set up (eg. to check for a setup where no moves are possible)
   public Set<Coord> getValidMoves(Coord start) {
-    Set<Coord> moves = new HashSet<>();
-    if (board.getPiece(start) == null) {
-      return moves;
-    }
-    int pieceValue = board.getPiece(start).getValue();
-    char team = board.getPiece(start).getTeam();
+    return board.getValidMoves(start);
+  }
 
-    List<Coord> oneSpaceAway = new ArrayList<>(
-      List.of(
-        new Coord(start.row+1, start.col), new Coord(start.row-1, start.col),
-        new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
-      )
-    );
-    // "normal" one-space-away moves
-    for (Coord move : oneSpaceAway) {
-      if (board.isMoveAllowed(start, move, team)) {
-        moves.add(move);
-      }
-    }
-
-    // Scouts - enumerate all possible lateral moves
-    if (pieceValue == 2) {
-      moves.addAll(board.scoutMoves(start, team));
-    }
-
-    return moves;
+  public char getTurn() {
+    return turn;
   }
 
   public List<Piece> getCaptured() {
@@ -53,19 +40,20 @@ class Game {
     return allCaptured;
   }
 
-  // Called by the API to move a piece
-  // Returns true iff the game is over after this move
-  public boolean makeMove(Coord start, Coord end, char team) {
-    // TODO: Consider removing team as a param since we can check the piece
-    // on start against which team's turn it is
-    if (team != turn) {
-      return false;
-    }
-    if (!board.isMoveAllowed(start, end, team)) {
-      return false;
-    }
+  public Piece getLastCapture() {
+    return lastCapture;
+  }
 
-    if (!getValidMoves(start).contains(end)) {
+  // Called by the API to move a piece
+  // Returns true iff the game is over after this move. To simplify things: there are no draws,
+  // if the next player cannot make a move, that player loses
+  public boolean makeMove(Coord start, Coord end) {
+    if (!started
+      || !board.isMoveAllowed(start, end)
+      // If the move is allowed, we know that there is a piece on start
+      || board.getPiece(start).getTeam() != turn
+      || !getValidMoves(start).contains(end)
+    ) {
       return false;
     }
 
@@ -83,18 +71,30 @@ class Game {
     // FLAG
     if (attackedPieceValue == 11) {
       // end the game
+      winner = turn;
       return true;
     }
 
     performCapture(start, end, pieceValue, attackedPieceValue);
-    // TODO: Need some concept of *who* won the game
+
     if (capturedBlues.size() == 30 || capturedReds.size() == 30) {
-      // end the game
+      winner = capturedBlues.size() == 30 ? 'r' : 'b';
+      return true;
+    }
+
+    // End the game if the opposing player can't make any moves
+    if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
+      winner = turn;
       return true;
     }
 
     turn = opposingTeam(turn);
     return false;
+  }
+
+  public char getWinner() {
+    // Will return '\u0000' if the game is not over yet
+    return winner;
   }
 
   private void performCapture(Coord start, Coord end, int pieceValue, int attackedPieceValue) {
@@ -132,6 +132,7 @@ class Game {
     } else {
       capturedBlues.add(board.getPiece(pos));
     }
+    lastCapture = board.getPiece(pos);
     board.removePiece(pos);
   }
 

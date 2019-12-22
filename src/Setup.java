@@ -5,22 +5,11 @@ class Setup {
   boolean redSetUp = false;
   boolean started = false;
 
+  // TODO: Disallow having a setup where one team cannot move
   public Setup(Board board, Game game) {
     this.board = board;
     this.game = game;
     board.setup();
-
-    // DEBUG. Move this to a testing class
-    board.swapPieces(new Coord(2,1), new Coord(3,1));
-    board.printBoard();
-    submitTeam('r');
-    submitTeam('b');
-    System.out.println(board.getPiece(new Coord(3,1)));
-    System.out.println(game.getValidMoves(new Coord(3,1)));
-    game.makeMove(new Coord(3,1), new Coord(6,1), 'r');
-    System.out.println(game.getCaptured());
-    board.printBoard();
-    // END DEBUG
   }
 
   private boolean isTeamPiece(Coord p, char t) {
@@ -47,5 +36,9 @@ class Setup {
       game.start();
       started = true;
     }
+  }
+
+  public void displayBoard() {
+    System.out.println(board.toString());
   }
 }

@@ -31,4 +31,11 @@ class Piece {
   public char getTeam() {
     return team;
   }
+
+  // Mainly including for ease of debugging
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Piece)) return false;
+    Piece p2 = (Piece) obj;
+    return this.value == p2.value && this.team == p2.team && this.switchedTeam == p2.switchedTeam;
+  }
 }

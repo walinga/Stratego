@@ -109,7 +109,7 @@ class Board {
   // - whether the squares are one space apart (normal moves)
   // - which piece will die (if any)
   // - special moves/powers
-  public boolean isMoveAllowed(Coord start, Coord end, char team) {
+  public boolean isMoveAllowed(Coord start, Coord end) {
     if (end.col < 1 || end.col > numCols || end.row < 1 || end.row > numRows) {
       return false;
     }
@@ -124,11 +124,11 @@ class Board {
     if (pieces.get(end) == null) {
       return true;
     }
-    return pieces.get(start).getTeam() == team && pieces.get(end).getTeam() != team;
+    return pieces.get(start).getTeam() != pieces.get(end).getTeam();
   }
 
   // Special move methods
-  public Set<Coord> scoutMoves(Coord start, char team) {
+  public Set<Coord> scoutMoves(Coord start) {
     // *experimental*. Find scoutStart, scoutEnd
     /*int scoutStart = 1;
     int scoutEnd = start.row;
@@ -140,55 +140,106 @@ class Board {
     Set<Coord> moves = new HashSet<>();
     for (int i=start.row+1; i<=numRows; i++) {
       Coord move = new Coord(i,start.col);
-      if (isMoveAllowed(start, move, team)) {
+      if (isMoveAllowed(start, move)) {
         moves.add(move);
       }
-      if (pieces.get(move) != null) {
+      if (!isSquareEmpty(move)) {
         break;
       }
     }
     for (int i=start.row-1; i>0; i--) {
       Coord move = new Coord(i,start.col);
-      if (isMoveAllowed(start, move, team)) {
+      if (isMoveAllowed(start, move)) {
         moves.add(move);
       }
-      if (pieces.get(move) != null) {
+      if (!isSquareEmpty(move)) {
         break;
       }
     }
     for (int i=start.col+1; i<numCols; i++) {
       Coord move = new Coord(start.row,i);
-      if (isMoveAllowed(start, move, team)) {
+      if (isMoveAllowed(start, move)) {
         moves.add(move);
       }
-      if (pieces.get(move) != null) {
+      if (!isSquareEmpty(move)) {
         break;
       }
     }
     for (int i=start.col-1; i>0; i--) {
       Coord move = new Coord(start.row, i);
-      if (isMoveAllowed(start, move, team)) {
+      if (isMoveAllowed(start, move)) {
         moves.add(move);
       }
-      if (pieces.get(move) != null) {
+      if (!isSquareEmpty(move)) {
         break;
       }
     }
     return moves;
   }
 
-  // Debugging utility method
-  public void printBoard() {
+  public Set<Coord> getValidMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    if (pieces.get(start) == null) {
+      return moves;
+    }
+    int pieceValue = pieces.get(start).getValue();
+    char team = pieces.get(start).getTeam();
+
+    List<Coord> oneSpaceAway = new ArrayList<>(
+      List.of(
+        new Coord(start.row+1, start.col), new Coord(start.row-1, start.col),
+        new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
+      )
+    );
+    // "normal" one-space-away moves
+    for (Coord move : oneSpaceAway) {
+      if (isMoveAllowed(start, move)) {
+        moves.add(move);
+      }
+    }
+
+    // Scouts - enumerate all possible lateral moves
+    if (pieceValue == 2) {
+      moves.addAll(scoutMoves(start));
+    }
+
+    return moves;
+  }
+
+  // TODO: Decide whether we need all the moves or just a boolean: whether there are exactly 0
+  public Set<Coord> getAllMoves(char team) {
+    Set<Coord> moves = new HashSet<>();
     for (int i=1; i<=numRows; i++) {
       for (int j=1; j<=numCols; j++) {
-        Piece piece = pieces.get(new Coord(i,j));
-        if (piece == null) {
-          System.out.printf("O ");
-        } else {
-          System.out.printf(piece.toString() + " ");
+        Coord pos = new Coord(i,j);
+        if (pieces.get(pos) != null && pieces.get(pos).getTeam() == team) {
+          moves.addAll(getValidMoves(pos));
         }
       }
-      System.out.printf("\n");
     }
+    return moves;
+  }
+
+  private boolean isSquareEmpty(Coord pos) {
+    return pieces.get(pos) == null && !forbiddenZones.contains(pos);
+  }
+
+  // Debugging utility method
+  public String toString() {
+    String base = "";
+    for (int i=numRows; i>0; i--) {
+      for (int j=1; j<=numCols; j++) {
+        Piece piece = pieces.get(new Coord(i,j));
+        if (forbiddenZones.contains(new Coord(i,j))) {
+          base += "x  ";
+        } else if (piece == null) {
+          base += "O  ";
+        } else {
+          base += (piece.toString() + " ");
+        }
+      }
+      base += "\n";
+    }
+    return base;
   }
 }
