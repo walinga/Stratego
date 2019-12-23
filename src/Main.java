@@ -3,15 +3,16 @@ class Main {
   static Game game;
   static Setup setup;
   static UserInput ui;
+  static Api api;
 
   public static void main(String[] args) {
     board = new Board();
 
     game = new Game(board);
     setup = new Setup(board, game);
+    api = new Api(setup, game);
 
-    // TODO: Set up the API and pass in a setup and game
-    // For now, we'll just listen through the keyboard
-    ui = new UserInput(setup, game);
+    // DEBUG: Console i/o
+    //ui = new UserInput(setup, game);
   }
 }

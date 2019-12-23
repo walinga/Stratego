@@ -22,9 +22,19 @@ class Game {
     started = true;
   }
 
+  // TODO: Consider returning this in a more machine-readable format (eg. Map<Coord,Piece>)
+  public String getBoardForTeam(char team) {
+    String fullBoard = board.toString();
+    String lookup = "\\d+" + Character.toString(opposingTeam(team));
+    return fullBoard.replaceAll(lookup, "?");
+  }
+
   // Don't check the started boolean here. We may eventually want to call this method
   // before the board is set up (eg. to check for a setup where no moves are possible)
-  public Set<Coord> getValidMoves(Coord start) {
+  public Set<Coord> getValidMoves(Coord start, char team) {
+    if (board.getPiece(start) == null || board.getPiece(start).getTeam() != team) {
+      return new HashSet<>();
+    }
     return board.getValidMoves(start);
   }
 
@@ -50,9 +60,7 @@ class Game {
   public boolean makeMove(Coord start, Coord end) {
     if (!started
       || !board.isMoveAllowed(start, end)
-      // If the move is allowed, we know that there is a piece on start
-      || board.getPiece(start).getTeam() != turn
-      || !getValidMoves(start).contains(end)
+      || !getValidMoves(start, turn).contains(end)
     ) {
       return false;
     }

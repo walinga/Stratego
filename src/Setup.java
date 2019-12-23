@@ -25,7 +25,8 @@ class Setup {
   }
 
   // Called by the API to indicate that a team is done setting up
-  public void submitTeam(char team) {
+  // Returns true if the game started
+  public boolean submitTeam(char team) {
     if (team == 'r') {
       redSetUp = true;
     } else if (team == 'b') {
@@ -36,6 +37,7 @@ class Setup {
       game.start();
       started = true;
     }
+    return started;
   }
 
   public void displayBoard() {

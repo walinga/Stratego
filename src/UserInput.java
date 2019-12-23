@@ -44,14 +44,15 @@ class UserInput {
     while (true) {
       try {
         setup.displayBoard();
-        System.out.println(teamName(game.getTurn()) + "'s turn");
+        char turn = game.getTurn();
+        System.out.println(teamName(turn) + "'s turn");
 
         String s = in.nextLine();
         if (s.contains("v")) {
           String[] inputCoords = s.split(" ");
           String[] c2 = inputCoords[1].split(",");
           Coord a = new Coord(Integer.parseInt(c2[0]), Integer.parseInt(c2[1]));
-          System.out.println(game.getValidMoves(a));
+          System.out.println(game.getValidMoves(a, turn));
           continue;
         }
 

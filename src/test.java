@@ -57,7 +57,7 @@ class test {
     setup.submitTeam('r');
     setup.submitTeam('b');
     boolean cond1 = board.getPiece(new Coord(3,1)).toString().equals("2r");
-    boolean cond2 = game.getValidMoves(new Coord(3,1)).equals(new HashSet<>(
+    boolean cond2 = game.getValidMoves(new Coord(3,1), 'r').equals(new HashSet<>(
       List.of(new Coord(4,1), new Coord(5,1), new Coord(6,1))
     ));
     game.makeMove(new Coord(3,1), new Coord(6,1));
@@ -80,7 +80,8 @@ class test {
     boolean cond3 = game.getCaptured().equals(new ArrayList<>(
       List.of(new Piece(3, 'r'), new Piece(3, 'b'))
     ));
-    return cond1 && cond2 && cond3;
+    boolean cond4 = game.getLastCapture().equals(new Piece(3, 'b'));
+    return cond1 && cond2 && cond3 && cond4;
   }
 
   public static boolean captureFlagTest() {
@@ -104,9 +105,6 @@ class test {
     board.swapPieces(new Coord(2,1), new Coord(3,1));
     setup.submitTeam('r');
     boolean gameOver = game.makeMove(new Coord(3,1), new Coord(6,1));
-    System.out.println(board);
-    System.out.println(gameOver);
-    System.out.println(board.getAllMoves('b'));
     return game.getWinner() == 'r';
   }
 }

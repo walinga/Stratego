@@ -129,50 +129,26 @@ class Board {
 
   // Special move methods
   public Set<Coord> scoutMoves(Coord start) {
-    // *experimental*. Find scoutStart, scoutEnd
-    /*int scoutStart = 1;
-    int scoutEnd = start.row;
-    for (int i=1; i<=board.numCols; i++) {
-      if (board.getPiece(move) != null) {
-        scoutStart++;
-      }
-    }*/
     Set<Coord> moves = new HashSet<>();
     for (int i=start.row+1; i<=numRows; i++) {
       Coord move = new Coord(i,start.col);
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
-      if (!isSquareEmpty(move)) {
-        break;
-      }
+      if (isMoveAllowed(start, move)) moves.add(move);
+      if (!isSquareEmpty(move)) break;
     }
     for (int i=start.row-1; i>0; i--) {
       Coord move = new Coord(i,start.col);
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
-      if (!isSquareEmpty(move)) {
-        break;
-      }
+      if (isMoveAllowed(start, move)) moves.add(move);
+      if (!isSquareEmpty(move)) break;
     }
     for (int i=start.col+1; i<numCols; i++) {
       Coord move = new Coord(start.row,i);
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
-      if (!isSquareEmpty(move)) {
-        break;
-      }
+      if (isMoveAllowed(start, move)) moves.add(move);
+      if (!isSquareEmpty(move)) break;
     }
     for (int i=start.col-1; i>0; i--) {
       Coord move = new Coord(start.row, i);
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
-      if (!isSquareEmpty(move)) {
-        break;
-      }
+      if (isMoveAllowed(start, move)) moves.add(move);
+      if (!isSquareEmpty(move)) break;
     }
     return moves;
   }
@@ -209,14 +185,11 @@ class Board {
   // TODO: Decide whether we need all the moves or just a boolean: whether there are exactly 0
   public Set<Coord> getAllMoves(char team) {
     Set<Coord> moves = new HashSet<>();
-    for (int i=1; i<=numRows; i++) {
-      for (int j=1; j<=numCols; j++) {
-        Coord pos = new Coord(i,j);
-        if (pieces.get(pos) != null && pieces.get(pos).getTeam() == team) {
-          moves.addAll(getValidMoves(pos));
-        }
+    pieces.forEach((pos, piece) -> {
+      if (piece != null && piece.getTeam() == team) {
+        moves.addAll(getValidMoves(pos));
       }
-    }
+    });
     return moves;
   }
 
