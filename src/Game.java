@@ -6,14 +6,17 @@ class Game {
   boolean started;
   char winner;
 
-  Piece lastCapture;
+  Piece lastAttackedPiece;
   List<Piece> capturedBlues;
   List<Piece> capturedReds;
+
+  final Piece nullPiece = new Piece(-1, '0');
 
   public Game(Board board) {
     this.board = board;
     capturedBlues = new ArrayList<>();
     capturedReds = new ArrayList<>();
+    lastAttackedPiece = nullPiece;
     started = false;
   }
 
@@ -29,9 +32,10 @@ class Game {
     return fullBoard.replaceAll(lookup, "?");
   }
 
-  // Don't check the started boolean here. We may eventually want to call this method
-  // before the board is set up (eg. to check for a setup where no moves are possible)
   public Set<Coord> getValidMoves(Coord start, char team) {
+    if (!started) {
+      return new HashSet<>();
+    }
     if (board.getPiece(start) == null || board.getPiece(start).getTeam() != team) {
       return new HashSet<>();
     }
@@ -42,6 +46,7 @@ class Game {
     return turn;
   }
 
+  // TODO: May make more sense for the API to read the captured pieces as separate Red and Blue sets
   public List<Piece> getCaptured() {
     List<Piece> allCaptured = new ArrayList<>(
       capturedReds
@@ -50,8 +55,13 @@ class Game {
     return allCaptured;
   }
 
-  public Piece getLastCapture() {
-    return lastCapture;
+  public Piece getLastAttacked() {
+    return lastAttackedPiece;
+  }
+
+  public char getWinner() {
+    // Will return '\u0000' if the game is not over yet
+    return winner;
   }
 
   // Called by the API to move a piece
@@ -65,6 +75,7 @@ class Game {
       return false;
     }
 
+    lastAttackedPiece = board.getPiece(end) == null ? nullPiece : board.getPiece(end);
     if (board.getPiece(end) == null) {
       // Move to an empty square, just move the starting piece
       board.swapPieces(start, end);
@@ -98,11 +109,6 @@ class Game {
 
     turn = opposingTeam(turn);
     return false;
-  }
-
-  public char getWinner() {
-    // Will return '\u0000' if the game is not over yet
-    return winner;
   }
 
   private void performCapture(Coord start, Coord end, int pieceValue, int attackedPieceValue) {
@@ -140,7 +146,6 @@ class Game {
     } else {
       capturedBlues.add(board.getPiece(pos));
     }
-    lastCapture = board.getPiece(pos);
     board.removePiece(pos);
   }
 

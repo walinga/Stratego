@@ -19,6 +19,7 @@ class Setup {
   // Called by the API to indicate two pieces being swapped
   // Assumes that the method is being called only before the game has started
   public void swapPieces(Coord a, Coord b, char team) {
+    if (started) return;
     if (isTeamPiece(a,team) && isTeamPiece(b,team)) {
       board.swapPieces(a, b);
     }

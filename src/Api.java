@@ -5,13 +5,6 @@ import com.sun.net.httpserver.*;
 //import com.github.cliftonlabs.json_simple.JsonObject;
 
 class Api {
-  // TODO notes:
-  // - no need to make a REST api
-  // - in the payload for each move need to return:
-  //    - whether the game is over (and who the winner is)
-  //    - reveal the attacked opposing piece if applicable
-  //    - a full list of captured pieces (for completeness)
-  //    - current board state
   Setup setup;
   Game game;
   final int port = 8051;
@@ -29,8 +22,8 @@ class Api {
   // (GET) getBoard(team) - returns a board with opposing team's pieces hidden
   // (UPDATE) swapPieces(pos1, pos2, team) - used during setup. returns new board
   // (UPDATE) submitTeam(team) - used to indicate setup is done. returns whether the game started
-  // (GET) getValidMoves(pos) - returns possible moves for a specific piece and team
-  // (UPDATE) makeMove(pos1, pos2) - makes the move. returns lots of stuff (see above)
+  // (GET) getValidMoves(pos, team) - returns possible moves for a specific piece and team
+  // (UPDATE) makeMove(pos1, pos2, team) - makes the move. returns lots of stuff (see above)
 
   private void startListening() {
     try {
@@ -80,7 +73,34 @@ class Api {
         sendResponse(httpExchange, response);
       });
 
-      // TODO: Implement makeMove endpoint !!
+      // - in the payload for each move need to return:
+      //    - whether the game is over (and who the winner is)
+      //    - reveal the attacked opposing piece if applicable
+      //    - a full list of captured pieces (for completeness)
+      //    - current board state
+      hs.createContext("/makeMove",  httpExchange -> {
+        // Format: r,c r,c t
+        String raw_coords = readRequest(httpExchange);
+        String[] inputCoords = raw_coords.split(" ");
+        String[] c1 = inputCoords[0].split(",");
+        String[] c2 = inputCoords[1].split(",");
+        Coord a = new Coord(Integer.parseInt(c1[0]), Integer.parseInt(c1[1]));
+        Coord b = new Coord(Integer.parseInt(c2[0]), Integer.parseInt(c2[1]));
+
+        char team = inputCoords[2].toCharArray()[0];
+        boolean ended = game.makeMove(a, b);
+        String response = "{gameOver:" + Boolean.toString(ended) + ",";
+        if (ended) {
+          // NOTE: pseudo-json until we convert things to real json
+          response += "Winner: " + Character.toString(game.getWinner()) + "}";
+        } else {
+          response += "revealedPiece: " + game.getLastAttacked().toString()
+            + ", capturedPieces: " + game.getCaptured().toString()
+            + ", boardState: " + game.getBoardForTeam(team) + "}";
+        }
+
+        sendResponse(httpExchange, response);
+      });
 
       hs.start();
       System.out.println("API started! Listening on port " + Integer.toString(port));
@@ -108,6 +128,8 @@ class Api {
       byte response[] = resp.getBytes("UTF-8");
 
       httpExchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000");
+      // TODO: Add actual website URL as well
       httpExchange.sendResponseHeaders(200, response.length);
 
       OutputStream out = httpExchange.getResponseBody();

@@ -28,23 +28,23 @@ class test {
     setup = new Setup(board, game);
   }
 
-  final static String initBoard = "0b 0b 0b 0b 0b 0b 1b 7b 7b 7b \n" +
-                                  "2b 2b 2b 2b 6b 6b 8b 8b 9b 10b \n" +
-                                  "3b 3b 3b 3b 3b 4b 4b 5b 5b 11b \n" +
-                                  "O  O  x  x  O  O  x  x  O  O  \n" +
-                                  "O  O  x  x  O  O  x  x  O  O  \n" +
-                                  "2r 3r 3r 3r 3r 4r 4r 5r 5r 11r \n" +
+  final static String initBoard = "0r 0r 0r 0r 0r 0r 1r 7r 7r 7r \n" +
                                   "3r 2r 2r 2r 6r 6r 8r 8r 9r 10r \n" +
-                                  "0r 0r 0r 0r 0r 0r 1r 7r 7r 7r \n";
+                                  "2r 3r 3r 3r 3r 4r 4r 5r 5r 11r \n" +
+                                  "O  O  x  x  O  O  x  x  O  O  \n" +
+                                  "O  O  x  x  O  O  x  x  O  O  \n" +
+                                  "3b 3b 3b 3b 3b 4b 4b 5b 5b 11b \n" +
+                                  "2b 2b 2b 2b 6b 6b 8b 8b 9b 10b \n" +
+                                  "0b 0b 0b 0b 0b 0b 1b 7b 7b 7b \n";
 
-  final static String afterBoard =  "0b 0b 0b 0b 0b 0b 1b 7b 7b 7b \n" +
-                                    "2b 2b 2b 2b 6b 6b 8b 8b 9b 10b \n" +
-                                    "3b 3b 3b 3b 3b 4b 4b 5b 5b 11b \n" +
-                                    "O  O  x  x  O  O  x  x  O  O  \n" +
-                                    "O  O  x  x  O  O  x  x  O  O  \n" +
-                                    "O  3r 3r 3r 3r 4r 4r 5r 5r 11r \n" +
+  final static String afterBoard =  "0r 0r 0r 0r 0r 0r 1r 7r 7r 7r \n" +
                                     "3r 2r 2r 2r 6r 6r 8r 8r 9r 10r \n" +
-                                    "0r 0r 0r 0r 0r 0r 1r 7r 7r 7r \n";
+                                    "O  3r 3r 3r 3r 4r 4r 5r 5r 11r \n" +
+                                    "O  O  x  x  O  O  x  x  O  O  \n" +
+                                    "O  O  x  x  O  O  x  x  O  O  \n" +
+                                    "3b 3b 3b 3b 3b 4b 4b 5b 5b 11b \n" +
+                                    "2b 2b 2b 2b 6b 6b 8b 8b 9b 10b \n" +
+                                    "0b 0b 0b 0b 0b 0b 1b 7b 7b 7b \n";
 
   public static boolean basicTest1() {
     setup_test();
@@ -80,7 +80,7 @@ class test {
     boolean cond3 = game.getCaptured().equals(new ArrayList<>(
       List.of(new Piece(3, 'r'), new Piece(3, 'b'))
     ));
-    boolean cond4 = game.getLastCapture().equals(new Piece(3, 'b'));
+    boolean cond4 = game.getLastAttacked().equals(new Piece(3, 'b'));
     return cond1 && cond2 && cond3 && cond4;
   }
 

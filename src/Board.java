@@ -200,7 +200,7 @@ class Board {
   // Debugging utility method
   public String toString() {
     String base = "";
-    for (int i=numRows; i>0; i--) {
+    for (int i=1; i<=numRows; i++) {
       for (int j=1; j<=numCols; j++) {
         Piece piece = pieces.get(new Coord(i,j));
         if (forbiddenZones.contains(new Coord(i,j))) {
