@@ -61,7 +61,8 @@ class UserInput {
         String[] c2 = inputCoords[1].split(",");
         Coord a = new Coord(Integer.parseInt(c1[0]), Integer.parseInt(c1[1]));
         Coord b = new Coord(Integer.parseInt(c2[0]), Integer.parseInt(c2[1]));
-        boolean ended = game.makeMove(a, b);
+        game.makeMove(a, b);
+        boolean ended = game.isGameEnded();
         if (ended) {
           System.out.println("Winner: " + teamName(game.getWinner()));
           break;

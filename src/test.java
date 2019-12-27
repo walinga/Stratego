@@ -89,7 +89,8 @@ class test {
     board.swapPieces(new Coord(2,1), new Coord(3,10));
     setup.submitTeam('r');
     setup.submitTeam('b');
-    boolean gameOver = game.makeMove(new Coord(3,10), new Coord(6,10));
+    game.makeMove(new Coord(3,10), new Coord(6,10));
+    boolean gameOver = game.isGameEnded();
     return gameOver && game.getWinner() == 'r';
   }
 
@@ -104,7 +105,7 @@ class test {
     setup.submitTeam('b');
     board.swapPieces(new Coord(2,1), new Coord(3,1));
     setup.submitTeam('r');
-    boolean gameOver = game.makeMove(new Coord(3,1), new Coord(6,1));
+    game.makeMove(new Coord(3,1), new Coord(6,1));
     return game.getWinner() == 'r';
   }
 }

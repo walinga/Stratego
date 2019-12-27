@@ -31,7 +31,17 @@ class Api {
       // API Endpoints
       // TODO: Use JSON. May requiring setting up a pom.xml for the JSON parser
       // TODO: Consider sending 400s for bad requests (eg. swapping incorrect pieces)
+      hs.createContext("/newGame",  httpExchange -> {
+        // TODO: Need to store multiple game sessions if we want to allow concurrent games
+        Board b = new Board();
+        game = new Game(b);
+        setup = new Setup(b, game);
+        String response = setup.getGameId();
+        sendResponse(httpExchange, response);
+      });
+
       hs.createContext("/getBoard",  httpExchange -> {
+        httpExchange.getRequestURI().getQuery();
         // Should be either 'r' or 'b'
         char team = readRequest(httpExchange).toCharArray()[0];
         String response = game.getBoardForTeam(team);
@@ -88,7 +98,8 @@ class Api {
         Coord b = new Coord(Integer.parseInt(c2[0]), Integer.parseInt(c2[1]));
 
         char team = inputCoords[2].toCharArray()[0];
-        boolean ended = game.makeMove(a, b);
+        game.makeMove(a, b);
+        boolean ended = game.isGameEnded();
         String response = "{gameOver:" + Boolean.toString(ended) + ",";
         if (ended) {
           // NOTE: pseudo-json until we convert things to real json
@@ -128,7 +139,9 @@ class Api {
       byte response[] = resp.getBytes("UTF-8");
 
       httpExchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
-      httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000");
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+      //httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://localhost:3000");
+      //httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "http://192.168.0.23:3000");
       // TODO: Add actual website URL as well
       httpExchange.sendResponseHeaders(200, response.length);
 

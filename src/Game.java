@@ -64,24 +64,31 @@ class Game {
     return winner;
   }
 
+  public boolean isGameEnded() {
+    // The game is over if we have a winner
+    return winner == 'r' || winner == 'b';
+  }
+
   // Called by the API to move a piece
   // Returns true iff the game is over after this move. To simplify things: there are no draws,
   // if the next player cannot make a move, that player loses
-  public boolean makeMove(Coord start, Coord end) {
-    if (!started
-      || !board.isMoveAllowed(start, end)
-      || !getValidMoves(start, turn).contains(end)
-    ) {
-      return false;
+  public void makeMove(Coord start, Coord end) {
+    // Update the lastAttackedPiece so the API can query the correct nullPiece
+    lastAttackedPiece = nullPiece;
+
+    // TODO (low priority): Also check whether the game ended (need ended boolean)
+    if (!started || !board.isMoveAllowed(start, end) || !getValidMoves(start, turn).contains(end)) {
+      return;
     }
 
-    lastAttackedPiece = board.getPiece(end) == null ? nullPiece : board.getPiece(end);
     if (board.getPiece(end) == null) {
       // Move to an empty square, just move the starting piece
       board.swapPieces(start, end);
       turn = opposingTeam(turn);
-      return false;
+      return;
     }
+    // Update the most recently revealed piece
+    lastAttackedPiece = board.getPiece(end);
 
     // At this point, both start and end are valid pieces.
     int pieceValue = board.getPiece(start).getValue();
@@ -91,24 +98,20 @@ class Game {
     if (attackedPieceValue == 11) {
       // end the game
       winner = turn;
-      return true;
+      return;
     }
 
     performCapture(start, end, pieceValue, attackedPieceValue);
 
     if (capturedBlues.size() == 30 || capturedReds.size() == 30) {
       winner = capturedBlues.size() == 30 ? 'r' : 'b';
-      return true;
-    }
-
-    // End the game if the opposing player can't make any moves
-    if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
+    } else if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
+      // End the game if the opposing player can't make any moves
       winner = turn;
-      return true;
     }
 
     turn = opposingTeam(turn);
-    return false;
+    return;
   }
 
   private void performCapture(Coord start, Coord end, int pieceValue, int attackedPieceValue) {

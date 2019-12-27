@@ -19,7 +19,9 @@ class Setup {
   // Called by the API to indicate two pieces being swapped
   // Assumes that the method is being called only before the game has started
   public void swapPieces(Coord a, Coord b, char team) {
-    if (started) return;
+    if (started || (team=='b' && blueSetUp) || (team=='r' && redSetUp)) {
+      return;
+    }
     if (isTeamPiece(a,team) && isTeamPiece(b,team)) {
       board.swapPieces(a, b);
     }
@@ -39,6 +41,11 @@ class Setup {
       started = true;
     }
     return started;
+  }
+
+  public String getGameId() {
+    // TODO: Implement this. Should return a unique ID which will be pased to the API
+    return "";
   }
 
   public void displayBoard() {
