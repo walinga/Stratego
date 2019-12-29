@@ -80,7 +80,9 @@ class test {
     boolean cond3 = game.getCaptured().equals(new ArrayList<>(
       List.of(new Piece(3, 'r'), new Piece(3, 'b'))
     ));
-    boolean cond4 = game.getLastAttacked().equals(new Piece(3, 'b'));
+    boolean cond4 = game.getLastRevealed().containsValue(new ArrayList<>(
+      List.of(new Piece(3, 'r'), new Piece(3, 'b'))
+    ));
     return cond1 && cond2 && cond3 && cond4;
   }
 

@@ -6,7 +6,9 @@ class Game {
   boolean started;
   char winner;
 
-  Piece lastAttackedPiece;
+  Map<Coord, List<Piece>> lastRevealedPieces;
+  Map<Coord, Piece> revealedPowers;
+  List<Coord> lastMove; // Should be a pair (start, end)
   List<Piece> capturedBlues;
   List<Piece> capturedReds;
 
@@ -16,7 +18,9 @@ class Game {
     this.board = board;
     capturedBlues = new ArrayList<>();
     capturedReds = new ArrayList<>();
-    lastAttackedPiece = nullPiece;
+    lastRevealedPieces = new HashMap<>();
+    revealedPowers = new HashMap<>();
+    lastMove = new ArrayList<>();
     started = false;
   }
 
@@ -25,7 +29,6 @@ class Game {
     started = true;
   }
 
-  // TODO: Consider returning this in a more machine-readable format (eg. Map<Coord,Piece>)
   public String getBoardForTeam(char team) {
     String fullBoard = board.toString();
     String lookup = "\\d+" + Character.toString(opposingTeam(team));
@@ -55,8 +58,16 @@ class Game {
     return allCaptured;
   }
 
-  public Piece getLastAttacked() {
-    return lastAttackedPiece;
+  public Map<Coord, List<Piece>> getLastRevealed() {
+    return lastRevealedPieces;
+  }
+
+  public Map<Coord, Piece> getLastPowerUser() {
+    return revealedPowers;
+  }
+
+  public List<Coord> getLastMove() {
+    return lastMove;
   }
 
   public char getWinner() {
@@ -73,12 +84,27 @@ class Game {
   // Returns true iff the game is over after this move. To simplify things: there are no draws,
   // if the next player cannot make a move, that player loses
   public void makeMove(Coord start, Coord end) {
-    // Update the lastAttackedPiece so the API can query the correct nullPiece
-    lastAttackedPiece = nullPiece;
-
     // TODO (low priority): Also check whether the game ended (need ended boolean)
     if (!started || !board.isMoveAllowed(start, end) || !getValidMoves(start, turn).contains(end)) {
       return;
+    }
+    // Update the move's revealed pieces so that it stops showing if we moved onto an empty square
+    lastRevealedPieces = new HashMap<Coord, List<Piece>>();
+    revealedPowers = new HashMap<Coord, Piece>();
+    // Update the last move so the oppponent will know what move was made
+    lastMove = new ArrayList<>(List.of(start, end));
+
+    // Special moves
+    // NOTE: For 4/6/9 there we currently assume that they are attacking if the piece is one square away
+    if (!board.normalMoves(start).contains(end)) {
+      // Reveal the piece to let the opponent know it's making a move
+      // NOTE: Show the end square for 2,5,7,8; start square for 4,6,9
+      revealedPowers.put(end, board.getPiece(start));
+    }
+
+    if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
+      // End the game if the opposing player can't make any moves
+      winner = turn;
     }
 
     if (board.getPiece(end) == null) {
@@ -87,8 +113,10 @@ class Game {
       turn = opposingTeam(turn);
       return;
     }
-    // Update the most recently revealed piece
-    lastAttackedPiece = board.getPiece(end);
+    // Update the most recently revealed pieces
+    lastRevealedPieces.put(end, new ArrayList<>(List.of(
+      board.getPiece(start), board.getPiece(end)
+    )));
 
     // At this point, both start and end are valid pieces.
     int pieceValue = board.getPiece(start).getValue();
@@ -105,9 +133,6 @@ class Game {
 
     if (capturedBlues.size() == 30 || capturedReds.size() == 30) {
       winner = capturedBlues.size() == 30 ? 'r' : 'b';
-    } else if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
-      // End the game if the opposing player can't make any moves
-      winner = turn;
     }
 
     turn = opposingTeam(turn);
@@ -151,7 +176,6 @@ class Game {
     }
     board.removePiece(pos);
   }
-
 
   /* Helper methods */
   private char opposingTeam(char team) {

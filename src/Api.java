@@ -100,14 +100,23 @@ class Api {
         char team = inputCoords[2].toCharArray()[0];
         game.makeMove(a, b);
         boolean ended = game.isGameEnded();
-        String response = "{gameOver:" + Boolean.toString(ended) + ",";
+        // NOTE: pseudo-json until we convert things to real json
+        String response = "{\"gameOver\": \"" + Boolean.toString(ended) + "\",";
+        if (!game.getLastRevealed().isEmpty()) {
+          response += "\"revealedPiece\": \"" + game.getLastRevealed().toString() + "\",";
+        }
+        if (!game.getLastPowerUser().isEmpty()) {
+          response += "\"lastPowerUser\": \"" + game.getLastPowerUser().toString() + "\",";
+        }
+        if (!game.getLastMove().isEmpty()) {
+          response += "\"lastMove\": \"" + game.getLastMove().toString() + "\",";
+        }
         if (ended) {
-          // NOTE: pseudo-json until we convert things to real json
-          response += "Winner: " + Character.toString(game.getWinner()) + "}";
+          response += "\"Winner\": \"" + Character.toString(game.getWinner()) + "\"}";
         } else {
-          response += "revealedPiece: " + game.getLastAttacked().toString()
-            + ", capturedPieces: " + game.getCaptured().toString()
-            + ", boardState: " + game.getBoardForTeam(team) + "}";
+          String escapedBoard = game.getBoardForTeam(team).replaceAll("\n", "\\\\n");
+          response += "\"capturedPieces\": \"" + game.getCaptured().toString()
+            + "\", \"boardState\": \"" + escapedBoard + "\"}";
         }
 
         sendResponse(httpExchange, response);

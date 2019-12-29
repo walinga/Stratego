@@ -38,4 +38,9 @@ class Piece {
     Piece p2 = (Piece) obj;
     return this.value == p2.value && this.team == p2.team && this.switchedTeam == p2.switchedTeam;
   }
+
+  // NOTE: does not include any info about switchedTeam
+  public int hashCode() {
+    return Integer.hashCode(this.value) * 100 + Character.hashCode(this.team);
+  }
 }

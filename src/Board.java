@@ -127,6 +127,23 @@ class Board {
     return pieces.get(start).getTeam() != pieces.get(end).getTeam();
   }
 
+  public Set<Coord> normalMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    List<Coord> oneSpaceAway = new ArrayList<>(
+      List.of(
+        new Coord(start.row+1, start.col), new Coord(start.row-1, start.col),
+        new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
+      )
+    );
+    // "normal" one-space-away moves
+    for (Coord move : oneSpaceAway) {
+      if (isMoveAllowed(start, move)) {
+        moves.add(move);
+      }
+    }
+    return moves;
+  }
+
   // Special move methods
   public Set<Coord> scoutMoves(Coord start) {
     Set<Coord> moves = new HashSet<>();
@@ -159,20 +176,8 @@ class Board {
       return moves;
     }
     int pieceValue = pieces.get(start).getValue();
-    char team = pieces.get(start).getTeam();
 
-    List<Coord> oneSpaceAway = new ArrayList<>(
-      List.of(
-        new Coord(start.row+1, start.col), new Coord(start.row-1, start.col),
-        new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
-      )
-    );
-    // "normal" one-space-away moves
-    for (Coord move : oneSpaceAway) {
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
-    }
+    moves.addAll(normalMoves(start));
 
     // Scouts - enumerate all possible lateral moves
     if (pieceValue == 2) {
@@ -182,7 +187,7 @@ class Board {
     return moves;
   }
 
-  // TODO: Decide whether we need all the moves or just a boolean: whether there are exactly 0
+  // TODO: We just need a boolean: whether there are exactly 0
   public Set<Coord> getAllMoves(char team) {
     Set<Coord> moves = new HashSet<>();
     pieces.forEach((pos, piece) -> {
