@@ -91,69 +91,59 @@ class Game {
     // Update the move's revealed pieces so that it stops showing if we moved onto an empty square
     lastRevealedPieces = new HashMap<Coord, List<Piece>>();
     revealedPowers = new HashMap<Coord, Piece>();
-    // Update the last move so the oppponent will know what move was made
     lastMove = new ArrayList<>(List.of(start, end));
 
-    // Special moves
-    // NOTE: For 4/6/9 there we currently assume that they are attacking if the piece is one square away
-    if (!board.normalMoves(start).contains(end)) {
-      // Reveal the piece to let the opponent know it's making a move
-      // NOTE: Show the end square for 2,5,7,8; start square for 4,6,9
-      revealedPowers.put(end, board.getPiece(start));
+    // IDEA: For the 5's rampage, always do it if moving into an empty square with adjacent enemies
+
+    List<Integer> magicUsers = new ArrayList<>(List.of(4, 6, 9));
+    int pieceValue = board.getPiece(start).getValue();
+    boolean isSpecialMove = !board.oneSpaceAway(start).contains(end);
+    if (isSpecialMove) {
+      // Reveal the piece to let the opponent know it's making a special move
+      // NOTE: Show the end square for 2,5,7,8,10; start square for 4,6,9
+      revealedPowers.put(magicUsers.contains(pieceValue) ? start : end, board.getPiece(start));
+    }
+    if (isSpecialMove && magicUsers.contains(pieceValue)) {
+      // Special moves for 4/6/9
+      // NOTE: We assume that they are attacking if the piece is one square away
+      doSpecialMove(start, end);
+    } else if (board.getPiece(end) == null) {
+      // Move to an empty square, just move the starting piece
+      board.swapPieces(start, end);
+    } else {
+      lastRevealedPieces.put(end, new ArrayList<>(List.of(
+        board.getPiece(start), board.getPiece(end)
+      )));
+
+      performCapture(start, end);
     }
 
-    if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
+    if (capturedBlues.size() == 30 || capturedReds.size() == 30) {
+      winner = capturedBlues.size() == 30 ? 'r' : 'b';
+    } else if (board.getAllMoves(opposingTeam(turn)).isEmpty()) {
       // End the game if the opposing player can't make any moves
       winner = turn;
     }
 
-    if (board.getPiece(end) == null) {
-      // Move to an empty square, just move the starting piece
-      board.swapPieces(start, end);
-      turn = opposingTeam(turn);
-      return;
-    }
-    // Update the most recently revealed pieces
-    lastRevealedPieces.put(end, new ArrayList<>(List.of(
-      board.getPiece(start), board.getPiece(end)
-    )));
-
-    // At this point, both start and end are valid pieces.
-    int pieceValue = board.getPiece(start).getValue();
-    int attackedPieceValue = board.getPiece(end).getValue();
-
-    // FLAG
-    if (attackedPieceValue == 11) {
-      // end the game
-      winner = turn;
-      return;
-    }
-
-    performCapture(start, end, pieceValue, attackedPieceValue);
-
-    if (capturedBlues.size() == 30 || capturedReds.size() == 30) {
-      winner = capturedBlues.size() == 30 ? 'r' : 'b';
-    }
-
     turn = opposingTeam(turn);
-    return;
   }
 
-  private void performCapture(Coord start, Coord end, int pieceValue, int attackedPieceValue) {
+  private void performCapture(Coord start, Coord end) {
     char curTeam = this.turn;
     char oppTeam = opposingTeam(this.turn);
-    // Traps
-    if (attackedPieceValue == 0) {
+    int pieceValue = board.getPiece(start).getValue();
+    int attackedPieceValue = board.getPiece(end).getValue();
+    if (attackedPieceValue == 11) { // FLAG
+      // end the game
+      winner = turn;
+    } else if (attackedPieceValue == 0) { // Traps
       if (pieceValue == 3) {
         capturePiece(end, oppTeam);
         board.swapPieces(start, end);
       } else {
         capturePiece(start, curTeam);
       }
-      return;
-    }
-
-    if (pieceValue == 1 && attackedPieceValue == 10) { // Slayer
+    } else if (pieceValue == 1 && attackedPieceValue == 10) { // Slayer
       capturePiece(end, oppTeam);
       board.swapPieces(start, end);
     } else if (pieceValue > attackedPieceValue) {
@@ -164,6 +154,21 @@ class Game {
       capturePiece(end, oppTeam);
     } else /* pieceValue < attackedPieceValue */ {
       capturePiece(start, curTeam);
+    }
+  }
+
+  private void doSpecialMove(Coord start, Coord end) {
+    lastRevealedPieces.put(end, new ArrayList<>(List.of(
+      board.getPiece(end)
+    )));
+    char oppTeam = opposingTeam(this.turn);
+    int pieceValue = board.getPiece(start).getValue();
+    int attackedPieceValue = board.getPiece(end).getValue();
+    // NOTE: The 9 only reveals, nothing more
+    if (pieceValue == 6 && attackedPieceValue < 6) {
+      board.getPiece(end).switchTeam();
+    } else if (pieceValue == 4 && attackedPieceValue < 4) {
+      capturePiece(end, oppTeam);
     }
   }
 

@@ -127,7 +127,8 @@ class Board {
     return pieces.get(start).getTeam() != pieces.get(end).getTeam();
   }
 
-  public Set<Coord> normalMoves(Coord start) {
+  // Does not check move validity
+  public Set<Coord> oneSpaceAway(Coord start) {
     Set<Coord> moves = new HashSet<>();
     List<Coord> oneSpaceAway = new ArrayList<>(
       List.of(
@@ -135,17 +136,31 @@ class Board {
         new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
       )
     );
-    // "normal" one-space-away moves
     for (Coord move : oneSpaceAway) {
-      if (isMoveAllowed(start, move)) {
-        moves.add(move);
-      }
+      moves.add(move);
     }
     return moves;
   }
 
-  // Special move methods
-  public Set<Coord> scoutMoves(Coord start) {
+  // Does not check move validity
+  private Set<Coord> diagonals(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    moves.addAll(oneSpaceAway(start));
+    List<Coord> diagonals = new ArrayList<>(
+      List.of(
+        new Coord(start.row+1, start.col+1), new Coord(start.row-1, start.col+1),
+        new Coord(start.row+1, start.col-1), new Coord(start.row-1, start.col-1)
+      )
+    );
+    for (Coord move : diagonals) {
+      moves.add(move);
+    }
+    return moves;
+  }
+
+  /* Special move methods */
+
+  private Set<Coord> scoutMoves(Coord start) {
     Set<Coord> moves = new HashSet<>();
     for (int i=start.row+1; i<=numRows; i++) {
       Coord move = new Coord(i,start.col);
@@ -157,7 +172,7 @@ class Board {
       if (isMoveAllowed(start, move)) moves.add(move);
       if (!isSquareEmpty(move)) break;
     }
-    for (int i=start.col+1; i<numCols; i++) {
+    for (int i=start.col+1; i<=numCols; i++) {
       Coord move = new Coord(start.row,i);
       if (isMoveAllowed(start, move)) moves.add(move);
       if (!isSquareEmpty(move)) break;
@@ -170,6 +185,83 @@ class Board {
     return moves;
   }
 
+  // 7 - Beast Rider, and 8 - Knight
+  private Set<Coord> quicknessMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    for (Coord move : oneSpaceAway(start)) {
+      if (isSquareEmpty(move)) {
+        for (Coord moveTwo : oneSpaceAway(move)) {
+          if (isMoveAllowed(start, moveTwo)) {
+            moves.add(moveTwo);
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
+  // Two spaces away: diagonally, vert, horiz, or any combo
+  private Set<Coord> magicMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    for (Coord move : diagonals(start)) {
+      for (Coord moveTwo : diagonals(move)) {
+        if (isMoveAllowed(start, moveTwo) && !isSquareEmpty(moveTwo)) {
+          moves.add(moveTwo);
+        }
+      }
+    }
+    return moves;
+  }
+
+  // Can fly over any number of pieces in a row, then (optionally) attack an adjacent enemy
+  private Set<Coord> dragonMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    for (int i=start.row+1; i<=numRows; i++) {
+      Coord move = new Coord(i,start.col);
+      if (forbiddenZones.contains(move)) break;
+      if (isSquareEmpty(move)) {
+        // NOTE: Disqualify the first square in the loop since we can't attack from there
+        if (i != start.row+1) moves.add(move);
+        break;
+      }
+    }
+    for (int i=start.row-1; i>0; i--) {
+      Coord move = new Coord(i,start.col);
+      if (forbiddenZones.contains(move)) break;
+      if (isSquareEmpty(move)) {
+        if (i != start.row-1) moves.add(move);
+        break;
+      }
+    }
+    for (int i=start.col+1; i<=numCols; i++) {
+      Coord move = new Coord(start.row,i);
+      if (forbiddenZones.contains(move)) break;
+      if (isSquareEmpty(move)) {
+        if (i != start.col+1) moves.add(move);
+        break;
+      }
+    }
+    for (int i=start.col-1; i>0; i--) {
+      Coord move = new Coord(start.row, i);
+      if (forbiddenZones.contains(move)) break;
+      if (isSquareEmpty(move)) {
+        if (i != start.col-1) moves.add(move);
+        break;
+      }
+    }
+    // Loop through moves (should be <= 4) and check for enemies on adjacent squares
+    Set<Coord> attackMoves = new HashSet<Coord>();
+    for (Coord move : moves) {
+      for (Coord move2 : oneSpaceAway(move)) {
+        if (isMoveAllowed(start, move2) && !isSquareEmpty(move2)) {
+          attackMoves.add(move2);
+        }
+      }
+    }
+    moves.addAll(attackMoves);
+    return moves;
+  }
+
   public Set<Coord> getValidMoves(Coord start) {
     Set<Coord> moves = new HashSet<>();
     if (pieces.get(start) == null) {
@@ -177,11 +269,29 @@ class Board {
     }
     int pieceValue = pieces.get(start).getValue();
 
-    moves.addAll(normalMoves(start));
+    // "normal" one-space-away moves
+    for (Coord move : oneSpaceAway(start)) {
+      if (isMoveAllowed(start, move)) {
+        moves.add(move);
+      }
+    }
 
     // Scouts - enumerate all possible lateral moves
     if (pieceValue == 2) {
       moves.addAll(scoutMoves(start));
+    }
+
+    if (pieceValue == 7 || pieceValue == 8) {
+      moves.addAll(quicknessMoves(start));
+    }
+
+    List<Integer> magicUsers = new ArrayList<>(List.of(4, 6, 9));
+    if (magicUsers.contains(pieceValue)) {
+      moves.addAll(magicMoves(start));
+    }
+
+    if (pieceValue == 10) {
+      moves.addAll(dragonMoves(start));
     }
 
     return moves;

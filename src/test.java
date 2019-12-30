@@ -12,6 +12,7 @@ class test {
     testResults.add(basicTest2());
     testResults.add(captureFlagTest());
     testResults.add(noValidMovesTest());
+    testResults.add(quicknessTest());
     for (int i=0; i<testResults.size(); i++) {
       System.out.println("Test #" + Integer.toString(i+1));
       if (testResults.get(i)) {
@@ -104,10 +105,32 @@ class test {
     board.swapPieces(new Coord(8,4), new Coord(6,5));
     board.swapPieces(new Coord(8,5), new Coord(6,2));
     board.swapPieces(new Coord(8,6), new Coord(6,1));
+    board.swapPieces(new Coord(7,10), new Coord(7,8));
     setup.submitTeam('b');
     board.swapPieces(new Coord(2,1), new Coord(3,1));
     setup.submitTeam('r');
     game.makeMove(new Coord(3,1), new Coord(6,1));
+    System.out.println(board);
     return game.getWinner() == 'r';
+  }
+
+  // Test the powers for 7 and 8
+  public static boolean quicknessTest() {
+    setup_test();
+    board.swapPieces(new Coord(1,10), new Coord(3,10));
+    boolean cond1 = board.getValidMoves(new Coord(3,10)).equals(new HashSet<>(
+      List.of(new Coord(4,10), new Coord(5,10), new Coord(4,9))
+    ));
+    return cond1;
+  }
+
+  // Test the powers for 4, 6, and 9
+  // TODO: Implement these tests
+  public static boolean magicTest() {
+    return true;
+  }
+
+  public static boolean dragonTest() {
+    return true;
   }
 }
