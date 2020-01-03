@@ -93,19 +93,16 @@ class Game {
     revealedPowers = new HashMap<Coord, Piece>();
     lastMove = new ArrayList<>(List.of(start, end));
 
-    // IDEA: For the 5's rampage, always do it if moving into an empty square with adjacent enemies
-
     List<Integer> magicUsers = new ArrayList<>(List.of(4, 6, 9));
     int pieceValue = board.getPiece(start).getValue();
     boolean isSpecialMove = !board.oneSpaceAway(start).contains(end);
-    if (isSpecialMove) {
+    if (isSpecialMove && pieceValue != 5) {
       // Reveal the piece to let the opponent know it's making a special move
-      // NOTE: Show the end square for 2,5,7,8,10; start square for 4,6,9
+      // NOTE: Show the end square for 2,7,8,10; start square for 4,6,9
       revealedPowers.put(magicUsers.contains(pieceValue) ? start : end, board.getPiece(start));
     }
-    if (isSpecialMove && magicUsers.contains(pieceValue)) {
-      // Special moves for 4/6/9
-      // NOTE: We assume that they are attacking if the piece is one square away
+    if (isSpecialMove && (magicUsers.contains(pieceValue) || pieceValue == 5)) {
+      // NOTE: We assume an attack (non-special move) if the piece is one square away
       doSpecialMove(start, end);
     } else if (board.getPiece(end) == null) {
       // Move to an empty square, just move the starting piece
@@ -130,7 +127,7 @@ class Game {
 
   private void performCapture(Coord start, Coord end) {
     char curTeam = this.turn;
-    char oppTeam = opposingTeam(this.turn);
+    char oppTeam = board.getPiece(end).getTeam();
     int pieceValue = board.getPiece(start).getValue();
     int attackedPieceValue = board.getPiece(end).getValue();
     if (attackedPieceValue == 11) { // FLAG
@@ -158,18 +155,68 @@ class Game {
   }
 
   private void doSpecialMove(Coord start, Coord end) {
+    int pieceValue = board.getPiece(start).getValue();
+    int attackedPieceValue = board.getPiece(end).getValue();
+    if (pieceValue == 5) {
+      performRampage(start, end);
+      return;
+    }
+    // MAGIC USERS
     lastRevealedPieces.put(end, new ArrayList<>(List.of(
       board.getPiece(end)
     )));
     char oppTeam = opposingTeam(this.turn);
-    int pieceValue = board.getPiece(start).getValue();
-    int attackedPieceValue = board.getPiece(end).getValue();
+    if (attackedPieceValue == 0) { // Traps
+      return;
+    }
     // NOTE: The 9 only reveals, nothing more
     if (pieceValue == 6 && attackedPieceValue < 6) {
       board.getPiece(end).switchTeam();
     } else if (pieceValue == 4 && attackedPieceValue < 4) {
       capturePiece(end, oppTeam);
     }
+  }
+
+  // IDEA: For the 5's rampage, NEVER do it if moving into an empty square
+  // But add adjacent enemies to valid moves and make those trigger a rampage
+  private void performRampage(Coord start, Coord end) {
+    // Determine rampage square from start and end
+    Coord rampageSquare = findRampageSquare(start, end);
+    if (!board.isSquareEmpty(rampageSquare)) {
+      rampageSquare = new Coord(start.row, end.col);
+    }
+    revealedPowers.put(rampageSquare, board.getPiece(start));
+    board.swapPieces(start, rampageSquare);
+    // Attack all surrounding pieces to the rampageSquare (including diagonally)
+    for (Coord move : board.diagonals(rampageSquare)) {
+      Piece p = board.getPiece(move);
+      if (p == null) continue;
+      lastRevealedPieces.put(move, new ArrayList<>(List.of( p )));
+      int attackedPieceValue = p.getValue();
+      if (attackedPieceValue == 11 || attackedPieceValue == 0) {
+        // Do nothing. Flags and traps not affected
+      } else if (attackedPieceValue < 5) {
+        capturePiece(move, p.getTeam());
+      } else if (attackedPieceValue == 5) {
+        capturePiece(rampageSquare, turn);
+        capturePiece(move, p.getTeam());
+      } else /* attackedPieceValue > 5 */ {
+        capturePiece(rampageSquare, turn);
+      }
+      lastMove.add(move); // Allow all attacked pieces to be a last move
+    }
+  }
+
+  private Coord findRampageSquare(Coord start, Coord end) {
+    int rCol = start.col;
+    if (Math.abs(start.col - end.col) == 2) {
+      rCol = (start.col + end.col) / 2;
+    }
+    int rRow = rCol == start.col ? end.row : start.row;
+    if (Math.abs(start.row - end.row) == 2) {
+      rRow = (start.row + end.row) / 2;
+    }
+    return new Coord(rRow, rCol);
   }
 
   // Wrapper for board.removePiece. Also updates captured piece fields

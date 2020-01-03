@@ -136,14 +136,13 @@ class Board {
         new Coord(start.row, start.col+1), new Coord(start.row, start.col-1)
       )
     );
-    for (Coord move : oneSpaceAway) {
-      moves.add(move);
-    }
+
+    moves.addAll(oneSpaceAway);
     return moves;
   }
 
   // Does not check move validity
-  private Set<Coord> diagonals(Coord start) {
+  public Set<Coord> diagonals(Coord start) {
     Set<Coord> moves = new HashSet<>();
     moves.addAll(oneSpaceAway(start));
     List<Coord> diagonals = new ArrayList<>(
@@ -152,9 +151,8 @@ class Board {
         new Coord(start.row+1, start.col-1), new Coord(start.row-1, start.col-1)
       )
     );
-    for (Coord move : diagonals) {
-      moves.add(move);
-    }
+
+    moves.addAll(diagonals);
     return moves;
   }
 
@@ -262,6 +260,21 @@ class Board {
     return moves;
   }
 
+  private Set<Coord> rampageMoves(Coord start) {
+    Set<Coord> moves = new HashSet<>();
+    for (Coord move : oneSpaceAway(start)) {
+      if (isSquareEmpty(move)) {
+        for (Coord move2 : diagonals(move)) {
+          // Add any enemy pieces that are adjacent to neighbouring squares
+          if (isMoveAllowed(start, move2) && !isSquareEmpty(move2)) {
+            moves.add(move2);
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
   public Set<Coord> getValidMoves(Coord start) {
     Set<Coord> moves = new HashSet<>();
     if (pieces.get(start) == null) {
@@ -279,6 +292,10 @@ class Board {
     // Scouts - enumerate all possible lateral moves
     if (pieceValue == 2) {
       moves.addAll(scoutMoves(start));
+    }
+
+    if (pieceValue == 5) {
+       moves.addAll(rampageMoves(start));
     }
 
     if (pieceValue == 7 || pieceValue == 8) {
@@ -308,7 +325,7 @@ class Board {
     return moves;
   }
 
-  private boolean isSquareEmpty(Coord pos) {
+  public boolean isSquareEmpty(Coord pos) {
     return pieces.get(pos) == null && !forbiddenZones.contains(pos);
   }
 

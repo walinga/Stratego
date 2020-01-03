@@ -5,7 +5,7 @@ class test {
   static Game game;
   static Setup setup;
 
-  // TODO: Eventually split this off into unit tests and integration tests
+  // NOTE: These are all "integration tests". Consider writing some unit tests
   public static void main(String[] args) {
     List<Boolean> testResults = new ArrayList<>();
     testResults.add(basicTest1());
@@ -13,13 +13,12 @@ class test {
     testResults.add(captureFlagTest());
     testResults.add(noValidMovesTest());
     testResults.add(quicknessTest());
+    testResults.add(magicTest());
+    testResults.add(dragonTest());
     for (int i=0; i<testResults.size(); i++) {
-      System.out.println("Test #" + Integer.toString(i+1));
-      if (testResults.get(i)) {
-        System.out.println("Passed!");
-      } else {
-        System.out.println("FAILED");
-      }
+      System.out.println("Test #" + Integer.toString(i+1) + ": "
+        + (testResults.get(i) ? "Passed!" : "FAILED")
+      );
     }
   }
 
@@ -110,7 +109,6 @@ class test {
     board.swapPieces(new Coord(2,1), new Coord(3,1));
     setup.submitTeam('r');
     game.makeMove(new Coord(3,1), new Coord(6,1));
-    System.out.println(board);
     return game.getWinner() == 'r';
   }
 
@@ -125,12 +123,54 @@ class test {
   }
 
   // Test the powers for 4, 6, and 9
-  // TODO: Implement these tests
   public static boolean magicTest() {
-    return true;
+    setup_test();
+    board.swapPieces(new Coord(2,5), new Coord(3,5)); // Move the 6
+    board.swapPieces(new Coord(2,9), new Coord(3,9)); // Move the 9
+    setup.submitTeam('r');
+    setup.submitTeam('b');
+    // TEST the 4
+    game.makeMove(new Coord(3,6), new Coord(4,6));
+    game.makeMove(new Coord(6,5), new Coord(5,5));
+    boolean cond1 = board.getValidMoves(new Coord(4,6)).equals(new HashSet<>(
+      List.of(new Coord(6,8), new Coord(6,7), new Coord(6,6), new Coord(6,4),
+              new Coord(5,5), new Coord(5,6), new Coord(4,5), new Coord(3,6))
+    ));
+    // TEST the 6
+    game.makeMove(new Coord(3,5), new Coord(4,5));
+    game.makeMove(new Coord(6,4), new Coord(6,5));
+    boolean cond2 = board.getValidMoves(new Coord(4,5)).equals(new HashSet<>(
+      List.of(new Coord(3,5), new Coord(5,5), new Coord(6,3), new Coord(6,5),
+              new Coord(6,6), new Coord(6,7))
+    ));
+    // TEST the 9
+    game.makeMove(new Coord(3,9), new Coord(4,9));
+    boolean cond3 = board.getValidMoves(new Coord(4,9)).equals(new HashSet<>(
+      List.of(new Coord(3,9), new Coord(4,10), new Coord(5,9), new Coord(6,10),
+              new Coord(6,7), new Coord(6,8), new Coord(6,9))
+    ));
+
+    return cond1 && cond2 && cond3;
   }
 
   public static boolean dragonTest() {
+    setup_test();
+    board.swapPieces(new Coord(3,9), new Coord(3,10));
+    setup.submitTeam('r');
+    setup.submitTeam('b');
+
+    game.makeMove(new Coord(3,10), new Coord(4,10));
+    game.makeMove(new Coord(7,10), new Coord(5, 10));
+    game.makeMove(new Coord(2,10), new Coord(3,10));
+    boolean cond1 = board.getValidMoves(new Coord(5,10)).equals(new HashSet<>(
+      List.of(new Coord(1,10), new Coord(2,10), new Coord(2,9), new Coord(3,10),
+            new Coord(4,10), new Coord(5,9), new Coord(7,10))
+    ));
+
+    return cond1;
+  }
+
+  public static boolean rampageTest() {
     return true;
   }
 }
