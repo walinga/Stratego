@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 class Coord {
   public int row;
   public int col;

@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 class Piece {
   int value; // value of 0 means trap. 1 means slayer/assassin. 11 means FLAG.
   char team; // 'r' = Red team. 'b' = Blue team

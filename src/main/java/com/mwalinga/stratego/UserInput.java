@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 import java.util.*;
 
 // NOTE: This is a simple instance of a front end for debugging use from the console

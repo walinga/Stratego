@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 import java.util.*;
 
 class test {
@@ -6,6 +8,7 @@ class test {
   static Setup setup;
 
   // NOTE: These are all "integration tests". Consider writing some unit tests
+  // TODO: Move to the test directory
   public static void main(String[] args) {
     List<Boolean> testResults = new ArrayList<>();
     testResults.add(basicTest1());

@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 class Main {
   static Board board;
   static Game game;

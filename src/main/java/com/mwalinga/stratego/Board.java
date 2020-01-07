@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 import java.util.*;
 
 class Board {

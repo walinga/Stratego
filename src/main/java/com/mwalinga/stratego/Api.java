@@ -1,3 +1,5 @@
+package com.mwalinga.stratego;
+
 import java.net.*;
 import java.util.*;
 import java.io.*;
@@ -7,7 +9,9 @@ import com.sun.net.httpserver.*;
 class Api {
   Setup setup;
   Game game;
-  final int port = 8051;
+  // TODO: Need to use maven as the build tool in order for heroku to work :o
+  // TODO: Must use heroku's port env variable if it is set
+  final int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : 8051;
 
   // TODO: Add a param "gameId" to all api methods to allow for multiple in-progress games
   // Add an endpoint newGame that will start a new game and return a gameId
@@ -33,10 +37,12 @@ class Api {
       // TODO: Consider sending 400s for bad requests (eg. swapping incorrect pieces)
       hs.createContext("/newGame",  httpExchange -> {
         // TODO: Need to store multiple game sessions if we want to allow concurrent games
+        char team = readRequest(httpExchange).toCharArray()[0];
         Board b = new Board();
         game = new Game(b);
         setup = new Setup(b, game);
-        String response = setup.getGameId();
+        // String response = setup.getGameId();
+        String response = game.getBoardForTeam(team);
         sendResponse(httpExchange, response);
       });
 
