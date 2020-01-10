@@ -9,8 +9,6 @@ import com.sun.net.httpserver.*;
 class Api {
   Setup setup;
   Game game;
-  // TODO: Need to use maven as the build tool in order for heroku to work :o
-  // TODO: Must use heroku's port env variable if it is set
   final int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : 8051;
 
   // TODO: Add a param "gameId" to all api methods to allow for multiple in-progress games
@@ -85,7 +83,10 @@ class Api {
         Coord a = new Coord(Integer.parseInt(c1[0]), Integer.parseInt(c1[1]));
 
         char team = inputCoords[1].toCharArray()[0];
-        String response = game.getValidMoves(a, team).toString();
+        String response = "{\"validMoves\": \"" +  game.getValidMoves(a, team).toString()  + "\",";
+        String escapedBoard = game.getBoardForTeam(team).replaceAll("\n", "\\\\n");
+        response += "\"capturedPieces\": \"" + game.getCaptured().toString()
+          + "\", \"boardState\": \"" + escapedBoard + "\"}";
         sendResponse(httpExchange, response);
       });
 
