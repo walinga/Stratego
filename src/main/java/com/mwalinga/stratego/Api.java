@@ -85,6 +85,9 @@ class Api {
         char team = inputCoords[1].toCharArray()[0];
         String response = "{\"validMoves\": \"" +  game.getValidMoves(a, team).toString()  + "\",";
         String escapedBoard = game.getBoardForTeam(team).replaceAll("\n", "\\\\n");
+        if (!game.getLastMove().isEmpty()) {
+          response += "\"lastMove\": \"" + game.getLastMove().toString() + "\",";
+        }
         response += "\"capturedPieces\": \"" + game.getCaptured().toString()
           + "\", \"boardState\": \"" + escapedBoard + "\"}";
         sendResponse(httpExchange, response);
